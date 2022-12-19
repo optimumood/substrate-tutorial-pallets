@@ -137,6 +137,7 @@ const fn deposit(items: u32, bytes: u32) -> Balance {
 }
 
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
+const CONTRACTS_DEBUG_OUTPUT: bool = true;
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
@@ -620,6 +621,48 @@ impl_runtime_apis! {
 			// NOTE: intentional unwrap: we don't want to propagate the error backwards, and want to
 			// have a backtrace here.
 			Executive::try_execute_block(block, state_root_check, select).expect("execute-block failed")
+		}
+	}
+
+	impl pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash> for Runtime {
+		fn call(
+		   	origin: AccountId,
+			dest: AccountId,
+			value: Balance,
+			gas_limit: Option<Weight>,
+			storage_deposit_limit: Option<Balance>,
+			input_data: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractExecResult<Balance> {
+			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
+		   	Contracts::bare_call(origin, dest, value, gas_limit, storage_deposit_limit, input_data, CONTRACTS_DEBUG_OUTPUT)
+		}
+
+		fn instantiate(
+			origin: AccountId,
+			value: Balance,
+			gas_limit: Option<Weight>,
+			storage_deposit_limit: Option<Balance>,
+			code: pallet_contracts_primitives::Code<Hash>,
+			data: Vec<u8>,
+			salt: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance> {
+			let gas_limit = gas_limit.unwrap_or(BlockWeights::get().max_block);
+		   	Contracts::bare_instantiate(origin, value, gas_limit, storage_deposit_limit, code, data, salt, CONTRACTS_DEBUG_OUTPUT)
+		}
+
+		fn upload_code(
+			origin: AccountId,
+			code: Vec<u8>,
+			storage_deposit_limit: Option<Balance>,
+		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance> {
+		   	Contracts::bare_upload_code(origin, code, storage_deposit_limit)
+		}
+
+		fn get_storage(
+			address: AccountId,
+			key: Vec<u8>,
+		) -> pallet_contracts_primitives::GetStorageResult {
+		   	Contracts::get_storage(address, key)
 		}
 	}
 }
