@@ -336,7 +336,12 @@ impl pallet_contracts::Config for Runtime {
 	type ContractAccessWeight = DefaultContractAccessWeight<BlockWeights>;
 	type MaxCodeLen = ConstU32<{ 256 * 1024 }>;
 	type RelaxedMaxCodeLen = ConstU32<{ 512 * 1024 }>;
-	type MaxStorageKeyLen = ConstU32<{ 512 * 1024 }>;}
+	type MaxStorageKeyLen = ConstU32<{ 512 * 1024 }>;
+}
+
+impl pallet_custom::Config for Runtime {
+	type Event = Event;
+}
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -358,6 +363,7 @@ construct_runtime!(
 		TemplateModule: pallet_template,
 		Nicks: pallet_nicks,
 		Contracts: pallet_contracts,
+		Custom: pallet_custom,
 	}
 );
 
